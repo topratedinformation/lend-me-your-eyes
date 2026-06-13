@@ -1,5 +1,4 @@
-# ReadAloud
-
+# Lend Me Your Eyes
 A free, installable web app (PWA) that reads physical or digital books aloud in a calm voice using the device camera, remembers where you left off, keeps a reading library, and recommends titles via affiliate links. Runs on any device with a browser and a camera.
 
 This is the Phase 1 MVP scaffold described in the product spec.
