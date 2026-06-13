@@ -26,7 +26,20 @@ export default defineConfig({
       },
       workbox: {
         // Tesseract pulls large WASM/training files at runtime; don't precache them.
-        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
+        cleanupOutdatedCaches: true,
+        clientsClaim: true,
+        skipWaiting: true,
+        // Always try the network first for page loads so a new deploy shows up
+        // immediately; only fall back to the cached version when offline.
+        navigateFallback: null,
+        runtimeCaching: [
+          {
+            urlPattern: ({ request }) => request.mode === 'navigate',
+            handler: 'NetworkFirst',
+            options: { cacheName: 'pages', networkTimeoutSeconds: 3 }
+          }
+        ]
       }
     })
   ]
