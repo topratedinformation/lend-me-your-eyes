@@ -15,13 +15,14 @@ export function frameFromVideo(video, maxWidth = 1280) {
   return canvas.toDataURL('image/jpeg', 0.8)
 }
 
-// mode: glance | describe | read | summary | menu | identify | question
-export async function describe(image, mode = 'describe', question = '') {
+// mode: glance | describe | read | summary | menu | identify | question | classify | recommend | legal
+// profile: optional short text summary of the user's tastes (kept on-device) for personalization.
+export async function describe(image, mode = 'describe', question = '', profile = '') {
   if (!image) throw new Error('No image captured')
   const res = await fetch(ENDPOINT, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ image, mode, question })
+    body: JSON.stringify({ image, mode, question, profile })
   })
   if (!res.ok) {
     let msg = 'Vision request failed'

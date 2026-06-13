@@ -5,6 +5,7 @@ import VoiceControls from './components/VoiceControls.jsx'
 import Player from './components/Player.jsx'
 import Library from './components/Library.jsx'
 import Discover from './components/Discover.jsx'
+import Profile from './components/Profile.jsx'
 import AssistantMode from './components/AssistantMode.jsx'
 import { splitSentences, speakSentence, stop, bedtimeFactor } from './lib/tts.js'
 import { fetchSpeech, playUrl, prefetch, stopNatural } from './lib/naturalTts.js'
@@ -55,6 +56,12 @@ export default function App() {
     idxRef.current = startIdx
     setResumeNote(startIdx > 0 ? `Resuming at sentence ${startIdx + 1} of ${sentences.length}.` : '')
     saveBook(id, { title, text, idx: startIdx, total: sentences.length, status: startIdx >= sentences.length - 1 ? 'completed' : 'reading' })
+    // Warm up the first couple of sentences so pressing Play starts instantly.
+    const s = settingsRef.current
+    if (s.engine === 'natural') {
+      prefetch(sentences[startIdx], s.aiVoice)
+      prefetch(sentences[startIdx + 1], s.aiVoice)
+    }
     setTab('read')
   }, [])
 
@@ -80,7 +87,8 @@ export default function App() {
       try {
         const url = await fetchSpeech(b.sentences[i], s.aiVoice)
         if (!playingRef.current) return
-        prefetch(b.sentences[i + 1], s.aiVoice) // warm up the next sentence
+        prefetch(b.sentences[i + 1], s.aiVoice) // warm up the next sentences
+        prefetch(b.sentences[i + 2], s.aiVoice)
         await playUrl(url)
         advance()
         return
@@ -167,7 +175,7 @@ export default function App() {
       </header>
 
       <nav className="tabs">
-        {['read', 'library', 'discover'].map(t => (
+        {['read', 'library', 'discover', 'you'].map(t => (
           <button key={t} className={'tab' + (tab === t ? ' active' : '')} onClick={() => setTab(t)}>
             {t[0].toUpperCase() + t.slice(1)}
           </button>
@@ -184,6 +192,7 @@ export default function App() {
         )}
         {tab === 'library' && <Library onOpen={(b) => loadBook(b.title, b.text || '', b.id)} />}
         {tab === 'discover' && <Discover />}
+        {tab === 'you' && <Profile />}
       </main>
 
       <Player book={book} idx={idx} playing={playing} onToggle={toggle} onSeek={seek} onDone={markDone} />

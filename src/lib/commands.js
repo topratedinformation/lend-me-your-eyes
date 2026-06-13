@@ -3,6 +3,8 @@
 // Returns { intent, question? }.
 
 const RULES = [
+  { intent: 'recommend', re: /\b(recommend|what should i (get|order|eat|have)|suggest (something|a dish|what)|what(?:'s| is) good here)\b/ },
+  { intent: 'legal',     re: /\b(legal|contract|agreement|lease|terms( and conditions)?|explain (this|the) (document|contract|agreement|terms)|should i sign|what am i agreeing to)\b/ },
   { intent: 'read',     re: /\b(read (it|this|the page|everything|all)|read aloud|full read|read it all)\b/ },
   { intent: 'summary',  re: /\b(summar|gist|short version|brief|tl;?dr|key points)\b/ },
   { intent: 'menu',     re: /\b(menu|what(?:'s| is) on the menu|food options|dishes)\b/ },
@@ -24,6 +26,13 @@ const QUESTION_RE = /\b(what|where|who|how (much|many)|is there|are there|does i
 export function parseCommand(transcript) {
   const t = (transcript || '').toLowerCase().trim()
   if (!t) return { intent: 'none' }
+  // "remember that…" / "note that…" — capture the thing to remember.
+  const rem = t.match(/^(?:please\s+)?(?:remember(?: that| this)?|note that|don'?t forget(?: that)?)\s+(.+)/)
+  if (rem && rem[1]) return { intent: 'remember', text: rem[1] }
+  // "I like / love / prefer / usually have …" — store the whole phrase.
+  if (/^i (?:really )?(?:like|love|prefer|enjoy|always have|usually (?:have|get|order))\b/.test(t)) {
+    return { intent: 'remember', text: t }
+  }
   for (const r of RULES) if (r.re.test(t)) return { intent: r.intent }
   // Anything else that reads like a question -> ask the vision model directly.
   if (QUESTION_RE.test(t)) return { intent: 'question', question: t }
@@ -33,6 +42,8 @@ export function parseCommand(transcript) {
 // Spoken menu of what the user can say, kept short for listening by ear.
 export const HELP_TEXT =
   "You can say: look, to see what's in front of you. Read it, for the full text. " +
-  "Summarise, for a short version. Describe, for what's around you. Read the menu. " +
-  "Or ask a question like, what's the price. You can also say next, back, pause, " +
-  "library, or continue my book."
+  "Summarise, for a short version. Describe, for what's around you. Read the menu, or " +
+  "recommend something, and I'll use what you like. Explain this document, for contracts " +
+  "or terms. Ask a question like, what's the price. Say remember that, followed by " +
+  "anything you'd like me to keep in mind. You can also say next, back, pause, library, " +
+  "or continue my book."

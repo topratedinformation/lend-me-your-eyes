@@ -1,0 +1,12 @@
+{
+  "appId": "com.lendmeyoureyes.app",
+  "appName": "Lend Me Your Eyes",
+  "webDir": "dist",
+  "server": {
+    "url": "https://lend-me-your-eyes.vercel.app",
+    "cleartext": false
+  },
+  "ios": {
+    "contentInset": "always"
+  }
+}

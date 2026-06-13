@@ -42,7 +42,24 @@ const PROMPTS = {
     "words, plain spoken language.",
   question:
     "You are the eyes of a blind user. Answer their question about the image directly and concisely in " +
-    "plain spoken language. If the answer isn't visible, say so. No markdown."
+    "plain spoken language. If the answer isn't visible, say so. No markdown.",
+  // Returns ONE keyword so the app can decide how to react.
+  classify:
+    "Reply with exactly ONE lowercase word naming what is mainly in view: " +
+    "menu, book, document, legal, product, label, sign, or scene. No other words, no punctuation.",
+  // Personalized recommendations (e.g. restaurant menus) using the user's tastes.
+  recommend:
+    "You are a warm personal assistant helping the user with what's in view (often a menu). " +
+    "Use what you know about their tastes to make specific, personal recommendations — call out their " +
+    "known favourites if they appear, respect anything they avoid, and give 1-3 concrete suggestions with " +
+    "prices if shown. Plain spoken language, under 90 words, no markdown.",
+  // Legal / contract documents: explain and flag — explicitly NOT legal advice.
+  legal:
+    "You are helping the user understand a legal or contract document. Begin by briefly saying you are not " +
+    "a lawyer and this is general information, not legal advice. Then explain in plain spoken language what " +
+    "the document is, the key terms, obligations, dates, costs, and anything they should be cautious about " +
+    "or clarify before signing — paying special attention to anything in their stated preferences. Finish by " +
+    "suggesting they have a qualified lawyer review anything important. No markdown."
 }
 
 export default async function handler(req, res) {
@@ -58,10 +75,13 @@ export default async function handler(req, res) {
 
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {})
-    const { image, mode = 'describe', question = '' } = body
+    const { image, mode = 'describe', question = '', profile = '' } = body
     if (!image) return res.status(400).json({ error: 'image (data URL) required' })
 
-    const system = PROMPTS[mode] || PROMPTS.describe
+    let system = PROMPTS[mode] || PROMPTS.describe
+    // Personalization: the client may send a short summary of the user's tastes
+    // (stored privately on their device) so responses can be tailored.
+    if (profile) system += '\n\nWhat you know about this user (use it to personalize): ' + profile
     const userText = mode === 'question'
       ? (question || 'What am I looking at?')
       : 'Here is the camera image.'
